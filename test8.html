@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test de prise de décision rapide</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: justify;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    transition: background-color 0.5s ease;
+  }
+  .container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  p {
+    line-height: 1.5;
+  }
+  button {
+    background-color: #d3d3d3;
+    border: none;
+    padding: 12px 20px;
+    margin: 10px 0;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: block;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+  input[type="text"] {
+    padding: 10px;
+    width: 80%;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+    margin: 10px auto;
+  }
+  .center {
+    text-align: center;
+  }
+  .hidden {
+    display: none;
+  }
+  .bold {
+    font-weight: bold;
+  }
+  .gray {
+    color: gray;
+  }
+  .red {
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="intro">
+  <h1><b>Bienvenu dans ce test de prise de décision rapide !</b></h1>
+  <p>
+    Dans le cadre de mon travail de maturité (TM), j'étudie le lien entre la pratique de patinage artistique et la rapidité de prise de décision. Tu n'as pas besoin d'être patineur.euse pour répondre à ce test.<br><br>
+    Cette expérience comporte 5 questions simples à choix multiples. Pour chaque question, tu dois choisir une réponse le plus rapidement possible.<br><br>
+    Ton temps de prise de décision sera mesuré pour chaque question.<br><br>
+    À la fin, il y aura une page affichant tes temps pour chaque question. Je te prie de faire une capture d'écran et de m'envoyer le résultat de ton test. Tes temps seront anonymes dans mon TM, il n'y a que moi qui saurai qui a fait quel temps.<br><br>
+    Lis bien chaque consigne et sois attentif.ve. Clique sur le bouton ci-dessous pour commencer.
+  </p>
+  <button onclick="startName()">Commencer le test</button>
+</div>
+
+<div class="container hidden" id="namePage">
+  <h2>Quel est ton prénom ?</h2>
+  <input type="text" id="nameInput" placeholder="Écris ton prénom ici">
+  <button onclick="startCountdown()">Valider et démarrer</button>
+</div>
+
+<div class="container center hidden" id="startPage">
+  <h2>C’est parti !</h2>
+</div>
+
+<div class="container hidden" id="questionPage"></div>
+
+<div class="container center hidden" id="transitionPage">
+  <h2><b>Prochaine question</b></h2>
+  <p id="countdown">3</p>
+</div>
+
+<div class="container hidden" id="resultsPage"></div>
+
+<script>
+const questions = [
+  {text: "Tu préfères…", options: ["Le matin", "L'après-midi", "Le soir", "La nuit"], color: "#fce4ec"},
+  {text: "Tu préfères…", options: ["La montagne", "La plage", "La ville", "La campagne"], color: "#e8f5e9"},
+  {text: "Tu préfères…", options: ["Les pâtes", "La pizza", "Les sushis", "La salade"], color: "#e3f2fd"},
+  {text: "Tu préfères…", options: ["Le sport", "Le shopping", "Lire", "Aller au cinéma"], color: "#fff3e0"},
+  {text: "Tu préfères…", options: ["La pop", "Le rap", "L'électro", "Le classique"], color: "#ede7f6"}
+];
+
+let currentQuestion = 0;
+let startTime;
+let results = [];
+let participant = "";
+
+function startName() {
+  document.getElementById("intro").classList.add("hidden");
+  document.getElementById("namePage").classList.remove("hidden");
+}
+
+function startCountdown() {
+  participant = document.getElementById("nameInput").value.trim() || "Participant";
+  document.getElementById("namePage").classList.add("hidden");
+  const startPage = document.getElementById("startPage");
+  startPage.classList.remove("hidden");
+  document.body.style.backgroundColor = questions[0].color;
+  setTimeout(() => {
+    startPage.classList.add("hidden");
+    showQuestion();
+  }, 3000);
+}
+
+function showQuestion() {
+  if (currentQuestion >= questions.length) {
+    showResults();
+    return;
+  }
+
+  const q = questions[currentQuestion];
+  document.body.style.backgroundColor = q.color;
+
+  const container = document.getElementById("questionPage");
+  container.innerHTML = `
+    <h2 class="bold">Question ${currentQuestion + 1} sur 5</h2>
+    <br><br>
+    <p class="center gray">${q.text}</p>
+    ${q.options.map(opt => `<button onclick="answerQuestion()">${opt}</button>`).join("")}
+  `;
+  container.classList.remove("hidden");
+  startTime = performance.now();
+}
+
+function answerQuestion() {
+  const endTime = performance.now();
+  const reactionTime = (endTime - startTime).toFixed(3);
+  results.push(reactionTime);
+
+  document.getElementById("questionPage").classList.add("hidden");
+  showTransition();
+}
+
+function showTransition() {
+  const tPage = document.getElementById("transitionPage");
+  tPage.classList.remove("hidden");
+  document.getElementById("countdown").innerText = "3";
+  let count = 3;
+  const interval = setInterval(() => {
+    count--;
+    document.getElementById("countdown").innerText = count;
+    if (count === 0) {
+      clearInterval(interval);
+      tPage.classList.add("hidden");
+      currentQuestion++;
+      showQuestion();
+    }
+  }, 1000);
+}
+
+function showResults() {
+  document.body.style.backgroundColor = "#ffffff";
+  const avg = (results.reduce((a,b)=>a+parseFloat(b),0)/results.length).toFixed(3);
+  const resPage = document.getElementById("resultsPage");
+  resPage.innerHTML = `
+    <h2><b>Résultats du test</b></h2>
+    <p><b>Question 1 :</b> ${results[0]} ms<br>
+       <b>Question 2 :</b> ${results[1]} ms<br>
+       <b>Question 3 :</b> ${results[2]} ms<br>
+       <b>Question 4 :</b> ${results[3]} ms<br>
+       <b>Question 5 :</b> ${results[4]} ms<br><br>
+       <b>Temps moyen :</b> ${avg} ms
+    </p>
+    <br><br>
+    <p class="center"><b class="red">N'OUBLIE PAS DE M'ENVOYER UNE CAPTURE D'ÉCRAN DE TES RÉSULTATS !!</b></p>
+    <p class="center">Merci énormément <i>${participant}</i> de ta participation cela m'est d'une grande aide. 😊<br>Daria</p>
+  `;
+  resPage.classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
